@@ -8,10 +8,22 @@ st.set_page_config(page_title="Otimizador de Rotas", page_icon="🗺️", layout
 st.title("🗺️ Otimizador de Rotas para Google Maps")
 st.markdown("Insira os endereços para calcular a rota mais rápida e gerar o link direto para o navegador ou celular.")
 
-# Configuração da API
-st.sidebar.header("Configuração")
-api_key = st.sidebar.text_input("Chave da API do Google Maps", type="password", 
-                                help="Você precisa de uma chave com a Directions API ativada.")
+# Configuração da API via Senha
+st.sidebar.header("Acesso")
+senha_input = st.sidebar.text_input("Senha de Acesso", type="password", 
+                                help="Digite a senha para ativar a API do Google Maps automaticamente.")
+
+# Lógica para carregar a API Key a partir do secret, caso a senha esteja correta
+api_key = None
+if senha_input:
+    try:
+        if senha_input == st.secrets["SENHA"]:
+            api_key = st.secrets["API_MAPS"]
+            st.sidebar.success("✅ Acesso liberado!")
+        else:
+            st.sidebar.error("❌ Senha incorreta.")
+    except KeyError:
+        st.sidebar.error("⚠️ Erro: Os secrets 'SENHA' e 'API_MAPS' não foram configurados corretamente no Streamlit.")
 
 # Inputs do Usuário
 st.subheader("Defina o Trajeto")
@@ -28,7 +40,7 @@ waypoints_text = st.text_area("Endereços", height=150,
 
 if st.button("Calcular Melhor Rota", type="primary"):
     if not api_key:
-        st.error("Por favor, insira a chave da API do Google Maps no menu lateral.")
+        st.error("Por favor, insira a senha correta no menu lateral para habilitar a API.")
     elif not origin or not destination or not waypoints_text:
         st.warning("Preencha o ponto de partida, o destino e pelo menos uma parada intermediária.")
     else:
@@ -73,6 +85,7 @@ if st.button("Calcular Melhor Rota", type="primary"):
                         # O Google Maps URL espera as paradas separadas por "|"
                         safe_waypoints = urllib.parse.quote("|".join(optimized_waypoints))
                         
+                        # URL corrigida para o formato padrão do Google Maps Directions
                         maps_url = f"https://www.google.com/maps/dir/?api=1&origin={safe_origin}&destination={safe_destination}&waypoints={safe_waypoints}"
                         
                         st.divider()
